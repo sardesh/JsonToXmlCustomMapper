@@ -20,8 +20,11 @@ public class JsonToXmlService {
     @Value("${xml.root.node}")
     String rootNode;
 
-    @Autowired
-    private JsonXmlMappingRepository repository;
+    private final JsonXmlMappingRepository repository;
+
+    public JsonToXmlService(JsonXmlMappingRepository repository) {
+        this.repository = repository;
+    }
 
     public String convertJsonToXml(String json) throws Exception {
         List<JsonXmlMapping> mappings = repository.findAll();
@@ -58,24 +61,18 @@ public class JsonToXmlService {
     }
 
     private Object applyOperator(Object operand1, Object operand2, String operator) {
-        switch (operator) {
-            case "+":
-                return (Double) operand1 + (Double) operand2;
-            case "-":
-                return (Double) operand1 - (Double) operand2;
-            case "x":
-                return (Double) operand1 * (Double) operand2;
-            case "/":
-                return (Double) operand1 / (Double) operand2;
-            case "round":
-                return Math.round((Double) operand1);
-            default:
-                throw new IllegalArgumentException("Invalid operator");
-        }
+        return switch (operator) {
+            case "+" -> (Double) operand1 + (Double) operand2;
+            case "-" -> (Double) operand1 - (Double) operand2;
+            case "x" -> (Double) operand1 * (Double) operand2;
+            case "/" -> (Double) operand1 / (Double) operand2;
+            case "round" -> Math.round((Double) operand1);
+            case "none" -> operand1;
+            default -> throw new IllegalArgumentException("Invalid operator");
+        };
     }
 
-    private String convertDocumentToString(Document doc) throws Exception {
+    private String convertDocumentToString(Document doc) {
         return doc.toString();
-        // Implementation to convert Document to String
     }
 }

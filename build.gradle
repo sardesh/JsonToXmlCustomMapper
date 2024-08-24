@@ -33,7 +33,7 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-web'
     implementation group: 'com.jayway.jsonpath', name: 'json-path', version: '2.9.0'
     compileOnly 'org.projectlombok:lombok'
-    implementation 'org.postgresql:postgresql:42.5.0' // Add this line
+    implementation 'org.postgresql:postgresql:42.7.2'
     developmentOnly 'org.springframework.boot:spring-boot-docker-compose'
     annotationProcessor 'org.projectlombok:lombok'
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
