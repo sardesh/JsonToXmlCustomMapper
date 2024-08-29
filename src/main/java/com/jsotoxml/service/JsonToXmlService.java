@@ -12,6 +12,12 @@ import org.w3c.dom.Element;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.stream.StreamResult;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.OutputKeys;
+import java.io.StringWriter;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -41,7 +47,7 @@ public class JsonToXmlService {
 
         for (JsonXmlMapping mapping : mappings) {
             Object operand1 = JsonPath.read(json, mapping.getJsonPathOperand1());
-            Object operand2 = JsonPath.read(json, mapping.getJsonPathOperand2());
+            Object operand2 = mapping.getJsonPathOperand2() != null ? JsonPath.read(json, mapping.getJsonPathOperand2()) : null;
             Object result = applyOperator(operand1, operand2, mapping.getOperator());
             applyValidations(result, mapping.getValidations());
 
@@ -84,6 +90,9 @@ public class JsonToXmlService {
     }
 
     private void applyValidations(Object result, List<Validation> validations) {
+        if (validations == null) {
+            return;
+        }
         for (Validation validation : validations) {
             switch (validation.getValidationType()) {
                 case NOT_NULL:
@@ -117,6 +126,23 @@ public class JsonToXmlService {
     }
 
     private String convertDocumentToString(Document doc) {
-        return doc.toString();
+        try {
+            TransformerFactory transformerFactory = TransformerFactory.newInstance();
+            Transformer transformer = transformerFactory.newTransformer();
+            transformer.setOutputProperty(OutputKeys.INDENT, "yes");
+            transformer.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "no");
+            transformer.setOutputProperty(OutputKeys.METHOD, "xml");
+            transformer.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "2");
+
+            DOMSource source = new DOMSource(doc);
+            StringWriter writer = new StringWriter();
+            StreamResult result = new StreamResult(writer);
+
+            transformer.transform(source, result);
+
+            return writer.toString();
+        } catch (Exception e) {
+            throw new RuntimeException("Error converting document to string", e);
+        }
     }
 }
