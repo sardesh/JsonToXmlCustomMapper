@@ -54,6 +54,17 @@ public class JsonToXmlService {
             }
             parentElement.appendChild(element);
             parentElements.put(mapping.getTargetXpath(), element);
+
+            // Handle dynamic child elements
+            String dynamicChildPath = mapping.detectDynamicChildPath();
+            if (dynamicChildPath != null) {
+                List<Object> childElements = JsonPath.read(json, dynamicChildPath);
+                for (Object child : childElements) {
+                    Element childElement = doc.createElement(mapping.getTargetXpath());
+                    childElement.appendChild(doc.createTextNode(child.toString()));
+                    element.appendChild(childElement);
+                }
+            }
         }
 
         // Convert Document to String

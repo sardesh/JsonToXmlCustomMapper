@@ -7,6 +7,8 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @Entity
 @Setter
@@ -20,6 +22,15 @@ public class JsonXmlMapping {
     private String targetXpath;
     @OneToMany(mappedBy = "jsonXmlMapping")
     private List<Validation> validations;
-    private String xmlAttribute; // New field for XML attribute
-    private String parentXpath;  // New field for parent element
+    private String xmlAttribute;
+    private String parentXpath;
+
+    public String detectDynamicChildPath() {
+        Pattern pattern = Pattern.compile("\\$\\..*\\[\\*\\]");
+        Matcher matcher = pattern.matcher(jsonPathOperand1);
+        if (matcher.find()) {
+            return matcher.group();
+        }
+        return null;
+    }
 }
