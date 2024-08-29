@@ -2,8 +2,11 @@ package com.jsotoxml.model;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
+import jakarta.persistence.OneToMany;
 import lombok.Getter;
 import lombok.Setter;
+
+import java.util.List;
 
 @Entity
 @Setter
@@ -15,7 +18,8 @@ public class JsonXmlMapping {
     private String jsonPathOperand2;
     private String operator;
     private String targetXpath;
-    private String validation;
+    @OneToMany(mappedBy = "jsonXmlMapping")
+    private List<Validation> validations;
     private String xmlAttribute; // New field for XML attribute
     private String parentXpath;  // New field for parent element
 }

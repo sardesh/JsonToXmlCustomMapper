@@ -2,6 +2,7 @@ package com.jsotoxml.service;
 
 import com.jayway.jsonpath.JsonPath;
 import com.jsotoxml.model.JsonXmlMapping;
+import com.jsotoxml.model.Validation;
 import com.jsotoxml.repository.JsonXmlMappingRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -22,6 +23,7 @@ public class JsonToXmlService {
 
     private final JsonXmlMappingRepository repository;
 
+    @Autowired
     public JsonToXmlService(JsonXmlMappingRepository repository) {
         this.repository = repository;
     }
@@ -35,15 +37,13 @@ public class JsonToXmlService {
         doc.appendChild(rootElement);
 
         Map<String, Element> parentElements = new HashMap<>();
-        parentElements.put("root", rootElement);
+        parentElements.put(rootNode, rootElement);
 
         for (JsonXmlMapping mapping : mappings) {
             Object operand1 = JsonPath.read(json, mapping.getJsonPathOperand1());
             Object operand2 = JsonPath.read(json, mapping.getJsonPathOperand2());
             Object result = applyOperator(operand1, operand2, mapping.getOperator());
-            if (mapping.getValidation().equals("non-null") && result == null) {
-                throw new IllegalArgumentException("Validation failed for " + mapping.getTargetXpath());
-            }
+            applyValidations(result, mapping.getValidations());
 
             Element parentElement = parentElements.getOrDefault(mapping.getParentXpath(), rootElement);
             Element element = doc.createElement(mapping.getTargetXpath());
@@ -70,6 +70,39 @@ public class JsonToXmlService {
             case "none" -> operand1;
             default -> throw new IllegalArgumentException("Invalid operator");
         };
+    }
+
+    private void applyValidations(Object result, List<Validation> validations) {
+        for (Validation validation : validations) {
+            switch (validation.getValidationType()) {
+                case NOT_NULL:
+                    if (result == null) {
+                        throw new IllegalArgumentException("Validation failed: result is null");
+                    }
+                    break;
+                case GREATER_THAN:
+                    if ((Double) result <= 0) {
+                        throw new IllegalArgumentException("Validation failed: result is not greater than zero");
+                    }
+                    break;
+                case LESS_THAN:
+                    if ((Double) result >= 0) {
+                        throw new IllegalArgumentException("Validation failed: result is not less than zero");
+                    }
+                    break;
+                case EQUALS:
+                    // Implement equals validation logic
+                    break;
+                case VALUES:
+                    // Implement values validation logic
+                    break;
+                case BETWEEN:
+                    // Implement between validation logic
+                    break;
+                default:
+                    throw new IllegalArgumentException("Invalid validation type");
+            }
+        }
     }
 
     private String convertDocumentToString(Document doc) {
